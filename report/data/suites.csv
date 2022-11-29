@@ -1,0 +1,3 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Tue Nov 29 22:28:13 GMT+08:00 2022","Tue Nov 29 22:28:30 GMT+08:00 2022","16877","testcases","test_excel.xlsx","Test_1_登录-","","","test_[登录成功]",""
+"passed","Tue Nov 29 22:28:37 GMT+08:00 2022","Tue Nov 29 22:29:01 GMT+08:00 2022","23660","testcases","test_excel.xlsx","Test_2_个人信息-","","","test_[更改头像，更改成功]",""

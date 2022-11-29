@@ -1,0 +1,23 @@
+WARNING  logs.log:excel_kdt.py:70 ----------------个人信息-.登录成功测试开始----------------
+INFO     logs.log:excel_kdt.py:78 执行关键字：key='driver_fixture',args=['driver']
+INFO     logs.log:conftest.py:40 正在使用Firefox浏览器
+INFO     logs.log:conftest.py:56 正在以最大化窗口运行浏览器
+INFO     logs.log:excel_kdt.py:78 执行关键字：key='get_page',args=['http://shop-xo.hctestedu.com/index.php?s=/index/user/logininfo.html']
+INFO     logs.log:kdt.py:92 正在访问网址:http://shop-xo.hctestedu.com/index.php?s=/index/user/logininfo.html
+INFO     logs.log:excel_kdt.py:78 执行关键字：key='input',args=["//*[@name='accounts']", 'liuge002']
+INFO     logs.log:kdt.py:39 正在定位元素('xpath', "//*[@name='accounts']")
+INFO     logs.log:kdt.py:43 input元素定位成功,位置：{'x': 994.5999755859376, 'y': 364.2000122070313, 'width': 345.0, 'height': 38.40000915527344}
+INFO     logs.log:kdt.py:58 正在输入文本:liuge002
+INFO     logs.log:excel_kdt.py:78 执行关键字：key='input',args=["//*[@name='pwd']", 'liuge666']
+INFO     logs.log:kdt.py:39 正在定位元素('xpath', "//*[@name='pwd']")
+INFO     logs.log:kdt.py:43 input元素定位成功,位置：{'x': 994.5999755859376, 'y': 441.7999877929687, 'width': 308.3999938964844, 'height': 38.399993896484375}
+INFO     logs.log:kdt.py:58 正在输入文本:liuge666
+INFO     logs.log:excel_kdt.py:78 执行关键字：key='click',args=["//button[contains(@data-am-loading,'{load') and text()='登录']"]
+INFO     logs.log:kdt.py:39 正在定位元素('xpath', "//button[contains(@data-am-loading,'{load') and text()='登录']")
+INFO     logs.log:kdt.py:43 button元素定位成功,位置：{'x': 994.5999755859376, 'y': 514.2000122070312, 'width': 345.0, 'height': 36.0}
+INFO     logs.log:kdt.py:82 正在点击://button[contains(@data-am-loading,'{load') and text()='登录']
+INFO     logs.log:excel_kdt.py:78 执行关键字：key='assert_equal_text',args=['//*[@class="prompt-msg"]', '登录成功']
+INFO     logs.log:kdt.py:104 实际结果:登录成功
+INFO     logs.log:kdt.py:106 期望结果:登录成功
+INFO     logs.log:kdt.py:109 相等断言成功，测试通过
+WARNING  logs.log:excel_kdt.py:107 ----------------个人信息-.登录成功测试结束----------------
