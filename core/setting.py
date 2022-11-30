@@ -34,6 +34,10 @@ class UISettings(BaseSettings):
     # 测试密码
     test_pwd: str = 'liuge666'
 
+    grid_url: str = ''
+
+    use_grid: bool = False
+
 
 # 载入ini文件内容
 def load_ini():

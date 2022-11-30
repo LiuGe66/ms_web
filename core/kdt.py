@@ -9,7 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.wait import WebDriverWait
-
+from core.setting import ui_setting
 
 
 class KeyWord:
@@ -22,8 +22,10 @@ class KeyWord:
     def set_driver(self, driver: WebDriver):
         logger.debug('为kw类设置driver')
         self.driver = driver
-        # self.wait = WebDriverWait(driver, ui_setting.wait_max, poll_frequency=ui_setting.wait_poll)
-        self.wait = WebDriverWait(driver, 10)
+        print('999999999999999999999999999999')
+
+        self.wait = WebDriverWait(driver, ui_setting.wait_max, poll_frequency=ui_setting.wait_poll)
+        # self.wait = WebDriverWait(driver, 10)
 
     def get_kw_method(self, key):
 
@@ -79,6 +81,7 @@ class KeyWord:
     def key_click(self, loc):
         ele = self.find_element(By.XPATH, loc)
         self.wait.until(lambda _: ele.is_enabled())
+        self.driver.execute_script('arguments[0].style="border: 5px solid #f83030 ;"', ele)
         logger.info(f'正在点击:{loc}')
         print(f'正在点击:{loc}')
         ele.click()

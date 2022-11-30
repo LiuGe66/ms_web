@@ -6,4 +6,4 @@ if __name__ == '__main__':
     pytest.main()
     os.system('allure generate temp/allure -o report --clean')
     if ui_setting.allure_show:
-        os.system('allure open report -p 8088')
+        os.system('allure open report -p 9022')

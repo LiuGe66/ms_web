@@ -17,8 +17,6 @@ def chrome_no_gui_driver():
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
     options.add_argument("--disable-gpu")
-    # options.add_argument('--incognito')
-    # options.add_argument('disable-cache')
     no_gui_driver = webdriver.Chrome(chrome_options=options)
     return no_gui_driver
 
@@ -31,7 +29,7 @@ def firefox_no_gui_driver():
     return no_gui_driver
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="session")
 def driver():
     if not ui_setting.cap_png:
         logger.info('截图功能已关闭')
@@ -79,7 +77,6 @@ def driver():
                 print('正在以最大化窗口运行浏览器')
             yield driver_
             driver_.quit()
-            time.sleep(0.5)
 
 
 def set_cookies(driver):
@@ -92,7 +89,6 @@ def set_cookies(driver):
     for cookie in cookies:
         driver.add_cookie(cookie)
         logger.info(f"设置cookie:{cookie}")
-
     driver.get(ui_setting.home_url)
 
 

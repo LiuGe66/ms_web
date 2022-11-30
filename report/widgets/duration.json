@@ -1,1 +1,1 @@
-[{"uid":"d0153215b47b8112","name":"test_[登录成功]","time":{"start":1669732093707,"stop":1669732110584,"duration":16877},"status":"passed","severity":"normal"},{"uid":"92b0fd9838cd3e55","name":"test_[更改头像，更改成功]","time":{"start":1669732117733,"stop":1669732141393,"duration":23660},"status":"passed","severity":"normal"}]
+[{"uid":"c10fa3a7c307b52c","name":"test_[更改头像，更改成功]","time":{"start":1669792647332,"stop":1669792654898,"duration":7566},"status":"broken","severity":"normal"}]
