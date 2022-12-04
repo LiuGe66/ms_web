@@ -71,12 +71,14 @@ def create_case(test_suite: dict, file):
                 print(f"----------------{suite_name}.{case_name}测试开始----------------")
                 step_list = case[1]
                 kw = KeyWord(request=self.request)  # 不传递driver，传递pytest
+
                 try:
                     for step in step_list:
                         key = step[2]  # 关键字
                         args = step[3:]  # 关键字参数
                         logger.info(f"执行关键字：{key=},{args=}")
                         f = kw.get_kw_method(key)  # 调用关键字
+
                         try:
                             with allure.step(step[1]):
                                 f(*args)
@@ -86,6 +88,7 @@ def create_case(test_suite: dict, file):
                                         step[1],
                                         allure.attachment_type.PNG,
                                     )
+
                         except Exception as e:
                             logger.error('关键字调用出错', exc_info=True)
                             # 执行关键字之后截图

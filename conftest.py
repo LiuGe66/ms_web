@@ -3,7 +3,9 @@
 # @FileName: conftest.py
 # @Time : 2022/11/24 16:15
 import json
+import os
 import time
+from webdriver_helper import debugger,get_webdriver
 from pathlib import Path
 import pytest
 from selenium import webdriver
@@ -11,6 +13,8 @@ from core import pom
 from core.setting import ui_setting
 from selenium.webdriver.firefox.options import Options
 from logs.log import logger
+
+
 
 
 def chrome_no_gui_driver():
@@ -87,8 +91,12 @@ def set_cookies(driver):
 
     logger.info(f"加载cookies{cookies}")
     for cookie in cookies:
-        driver.add_cookie(cookie)
-        logger.info(f"设置cookie:{cookie}")
+        try:
+            driver.add_cookie(cookie)
+            logger.info(f"设置cookie:{cookie}")
+        except Exception as e:
+            pass
+
     driver.get(ui_setting.home_url)
 
 
@@ -116,6 +124,7 @@ def user_driver():
                 driver.maximize_window()
                 logger.info('正在以最大化窗口运行浏览器')
                 print('正在以最大化窗口运行浏览器')
+            debugger('chrome')
             driver.get(ui_setting.home_url)
             set_cookies(driver)  # 加载登录状态
 
@@ -133,7 +142,7 @@ def user_driver():
             yield driver
             driver.quit()
         elif ui_setting.gui:
-            driver = webdriver.Chrome()
+            driver = get_webdriver()
             if ui_setting.window_max:
                 driver.maximize_window()
                 logger.info('正在以最大化窗口运行浏览器')
@@ -169,6 +178,8 @@ def user_driver():
             set_cookies(driver)  # 加载登录状态
 
             if not is_login(driver):
+                print('正在重新登录')
+                logger.info('正在重新登录')
                 page = pom.HomePage(driver)
                 page = page.to_login()  # 跳转到登录页面
                 page.login(ui_setting.test_accounts, ui_setting.test_pwd)
@@ -215,3 +226,83 @@ def clear_favor_driver(user_driver):
     else:
         pass
         yield user_driver
+
+
+@pytest.fixture(scope='session')
+def start_app():
+    # start_appium()
+    # from appium.webdriver import Remote as a_Remote
+    # caps = {
+    #     "appium:platformName": "Android",
+    #     "appium:deviceName": "1a44c444fb0b7ece",
+    #     "appium:appPackage": "com.automaster.practice.through",
+    #     "appium:appActivity": ".MainActivity",
+    #     "appium:platformVersion": "10.0",
+    #     "appium:noReset": True,
+    #     "appium:dontStopAppOnReset": True
+    # }
+    # driver = a_Remote("http://127.0.0.1:4723/wd/hub", caps)
+    # yield driver
+    # driver.quit()
+
+    # from appium.webdriver import Remote as a_Remote
+    # caps = {
+    #
+    #     "appium:platformName": "Android",
+    #     "appium:deviceName": "1a44c444fb0b7ece",
+    #     "appium:platformVersion": "10.0",
+    #     "appium:noReset": True,
+    #     "appium:dontStopAppOnReset": True,
+    #     "appium:appActivity": ".ui.home.MainActivity",
+    #     "appium:appPackage": "com.zhao.myreader"
+    # }
+    #
+    # driver = a_Remote("http://127.0.0.1:4723/wd/hub", caps)
+    # yield driver
+    # driver.quit()
+
+    # from appium.webdriver import Remote as a_Remote
+    # caps = {
+    #     "appium:platformName": "Android",
+    #     "appium:deviceName": "1a44c444fb0b7ece",
+    #     "appium:appPackage": "com.sec.android.app.clockpackage",
+    #     "appium:appActivity": ".ClockPackage",
+    #     "appium:platformVersion": "10.0",
+    #     "appium:noReset": True,
+    #     "appium:dontStopAppOnReset": True
+    # }
+    # driver = a_Remote("http://127.0.0.1:4723/wd/hub", caps)
+    # yield driver
+    # driver.quit()
+
+    # 应用宝
+    from appium.webdriver import Remote as a_Remote
+    caps = {
+        "appium:platformName": "Android",
+        "appium:deviceName": "1a44c444fb0b7ece",
+        "appium:appPackage": "com.tencent.android.qqdownloader",
+        "appium:appActivity": "com.tencent.pangu.link.SplashActivity",
+        "appium:platformVersion": "10",
+        "appium:noReset": True,
+        "appium:dontStopAppOnReset": True
+    }
+    driver = a_Remote("http://127.0.0.1:4723/wd/hub", caps)
+    yield driver
+    driver.quit()
+
+
+def start_appium():
+    flag = 0
+    while flag == 0:
+        result = os.popen('netstat -aon|findstr "4723"')  # 查询端口占用情况
+        time.sleep(1)
+        content = result.read()  # 读取cmd窗口返回的文本内容
+        # if "ESTABLISHED" in content:
+        if "127.0.0.1:4723" in content:  # 如果4723端口被占用则退出
+            # "127.0.0.1:4723"
+            print('Appium服务已就绪')
+            flag = 1
+        else:  # 如果4723端口没被占用则启动appium服务
+            print('准备启动Appium服务')
+            os.system('start /b appium')
+            time.sleep(10)

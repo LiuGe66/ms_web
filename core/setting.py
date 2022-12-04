@@ -16,7 +16,7 @@ class UISettings(BaseSettings):
     # 最大显式等待时间
     wait_max: float = 10
     # 显式等待轮询间隔
-    wait_poll: float = 0.5
+    wait_poll: float = 0.01
     # 浏览器类型
     driver_type: str = 'chrome'
     # 是否无界面运行
