@@ -1,2 +1,2 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"broken","Sun Dec 04 20:20:50 GMT+08:00 2022","Sun Dec 04 20:21:01 GMT+08:00 2022","10895","testcases","test_excel_app.xlsx","Test_1_app自动化","","","test_[首页]",""
+"failed","Mon Dec 05 17:45:42 GMT+08:00 2022","Mon Dec 05 17:46:00 GMT+08:00 2022","18620","testcases","test_excel_app.xlsx","Test_1_app自动化","","","test_[首页]",""

@@ -2,8 +2,8 @@
 # Author:liu_ge
 # @FileName: pom.py
 # @Time : 2022/11/24 21:07
+import inspect
 import time
-from logs.log import logger
 import allure
 from selenium import webdriver
 from selenium.webdriver.remote.webdriver import WebDriver
@@ -16,6 +16,8 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.common.actions.pointer_actions import PointerActions
 from selenium.webdriver.common.action_chains import ActionChains
+
+from logs.logger_utils import *
 
 
 class MyActionChains(ActionChains):
@@ -41,7 +43,7 @@ class KeyWord:
         self.vars = {}  # 用来存放临时变量
 
     def set_driver(self, driver: WebDriver):
-        logger.debug('为kw类设置driver')
+        print_debug_log('为kw类设置driver')
         self.driver = driver
         self.wait = WebDriverWait(driver, ui_setting.wait_max, poll_frequency=ui_setting.wait_poll)
 
@@ -57,23 +59,23 @@ class KeyWord:
         try:
             ele.clear()
         except:
-            print("清除元素文本失败")
+            print_info_log("清除元素文本失败")
         if content is not None:
-            print(f'正在输入文本:{content}')
+            print_info_log(f'正在输入文本:{content}')
             ele.send_keys(content)
 
     def key_upload(self, loc, file):
         ele = self.find_element(loc)
         self.wait.until(lambda _: ele.is_enabled())
         if file is not None:
-            print(f'正在上传文件:{file}')
+            print_info_log(f'正在上传文件:{file}')
             ele.send_keys(file)
         else:
-            print('文件地址为空')
+            print_info_log('文件地址为空')
 
     def key_js_code(self, loc, code):
         ele = self.find_element(loc)
-        print(f'正在执行JS脚本:{code}')
+        print_info_log(f'正在执行JS脚本:{code}')
         self.driver.execute_script(code, ele)
 
     def key_click(self, loc):
@@ -82,10 +84,10 @@ class KeyWord:
         try:
             self.driver.execute_script('arguments[0].style="border: 5px solid #f83030 ;"', ele)
         except Exception as e:
-            print('不支持元素添加样式')
-        print(f'正在点击:{loc}')
+            print_info_log('不支持元素添加样式')
+        print_info_log(f'正在点击:{loc}')
         ele.click()
-        print(f'点击成功:{loc}')
+        print_info_log(f'点击成功:{loc}')
 
     def key_new_driver(self):
         driver = webdriver.Chrome()
@@ -93,7 +95,7 @@ class KeyWord:
 
     def key_get_page(self, url):
         self.driver.get(url)
-        print(f'正在访问网址:{url}')
+        print_info_log(f'正在访问网址:{url}')
 
     @allure.step('元素定位')
     def find_element(self, loc):
@@ -106,19 +108,19 @@ class KeyWord:
         by = getattr(AppiumBy, by)
 
         try:
-            print(f"正在定位元素{loc=}")
+            print_info_log(f"正在定位元素{loc=}")
             el: WebElement = self.wait.until(lambda _: self.driver.find_element(by, value))
             try:
                 self.driver.execute_script('arguments[0].style="border: 5px solid #f83030 ;"', el)
             except Exception as e:
-                print('不支持元素添加样式')
+                print_info_log('不支持元素添加样式')
             if el.tag_name:
-                print(f"{el.tag_name}元素定位成功,位置：{el.rect}")
+                print_info_log(f"{el.tag_name}元素定位成功,位置：{el.rect}")
             else:
-                print(f"{el.text}元素定位成功,位置：{el.rect}")
+                print_info_log(f"{el.text}元素定位成功,位置：{el.rect}")
             return el
         except Exception as e:
-            print(f"元素{loc=}定位失败")
+            print_error_log(f"元素{loc=}定位失败")
             raise e
 
     @allure.step('文本相等断言')
@@ -129,18 +131,18 @@ class KeyWord:
         try:
             self.driver.execute_script('arguments[0].style="border: 5px solid #f83030 ;"', ele)
         except Exception as e:
-            print('不支持元素添加样式')
+            print_info_log('不支持元素添加样式')
         ele_text = ele.text
         ele_text = ele_text.strip()
         expect_text = expect_text.strip()
-        print(f"期望结果:{expect_text}")
+        print_info_log(f"期望结果:{expect_text}")
         if ele_text == expect_text:
-            print("相等断言成功，当前步骤测试通过")
-        assert ele_text == expect_text, logger.warning("断言失败,'{}'不等于'{}'".format(ele_text, expect_text))
+            print_info_log("相等断言成功，当前步骤测试通过")
+        assert ele_text == expect_text, print_error_log("断言失败,'{}'不等于'{}'".format(ele_text, expect_text))
 
     @allure.step('文本包含断言')
     def key_assert_contains_text(self, loc, expect_text):
-        print('正在进行文本包含断言')
+        print_info_log('正在进行文本包含断言')
         try:
             ele = self.wait.until(
                 lambda _: self.find_element(loc)
@@ -150,19 +152,19 @@ class KeyWord:
         try:
             self.driver.execute_script('arguments[0].style="border: 5px solid #f83030 ;"', ele)
         except Exception as e:
-            print('不支持元素添加样式')
+            print_info_log('不支持元素添加样式')
 
         ele_text = ele.text
         ele_text = ele_text.strip()
         expect_text = expect_text.strip()
-        print(f'实际结果:{ele_text}')
-        print(f"期望结果:{expect_text}")
+        print_info_log(f'实际结果:{ele_text}')
+        print_info_log(f"期望结果:{expect_text}")
         if expect_text in ele_text:
             flag = True
-            print("包含断言成功，当前步骤通过")
+            print_info_log("包含断言成功，当前步骤通过")
         else:
             flag = False
-        assert flag, logger.warning("断言失败,'{}'不在'{}'中".format(expect_text, ele_text))
+        assert flag, print_error_log("断言失败,'{}'不在'{}'中".format(expect_text, ele_text))
 
     def key_driver_fixture(self, fixture_name):
         """
@@ -175,9 +177,9 @@ class KeyWord:
 
     @allure.step('切换上下文')
     def key_context(self, context_name):
-        print(f'所有的上下文：{self.driver.contexts}')
+        print_info_log(f'所有的上下文：{self.driver.contexts}')
         self.driver.switch_to.context(context_name)
-        print(f"上下文切换成功：{context_name}")
+        print_info_log(f"上下文切换成功：{context_name}")
 
     @allure.step('保存变量')
     def key_var_save(self, loc, var_name):
@@ -187,14 +189,14 @@ class KeyWord:
             ele = self.find_element(loc)
         text = ele.text
         self.vars[var_name] = text
-        print(f"保存变量{var_name} = {text}成功")
+        print_info_log(f"保存变量{var_name} = {text}成功")
 
     @allure.step('输入变量')
     def key_var_input(self, loc, var_name):
         value = self.vars.get(var_name)
-        print(f'取出变量{var_name} = {value}')
+        print_info_log(f'取出变量{var_name} = {value}')
         self.key_input(loc, value)
-        print(f'已输入变量{var_name} = {value}')
+        print_info_log(f'已输入变量{var_name} = {value}')
 
     def find_element_toast(self, loc):
         """
@@ -203,9 +205,9 @@ class KeyWord:
         :return: 返回查找到的元素对象
         """
         wait = WebDriverWait(self.driver, 5, 0.1)
-        print("正在定位Toast元素")
+        print_info_log("正在定位Toast元素")
         el = wait.until(ec.presence_of_element_located((MobileBy.XPATH, loc)))
-        print("Toast元素定位成功")
+        print_info_log("Toast元素定位成功")
         return el
 
     def key_absolutely_swipe(self, start_coord, end_coord, times):
@@ -223,23 +225,24 @@ class KeyWord:
         ac = ActionChains(self.driver)
         for i in range(1, times + 1):
             ac.w3c_actions.pointer_action.move_to_location(start_x, start_y)  # 移动到指定位置
-            print(f'移动到指定起点{start_coord}')
+            print_info_log(f'移动到指定起点{start_coord}')
             time.sleep(0.1)
             ac.w3c_actions.pointer_action.pointer_down()  # 按下
-            print('光标按下')
+            print_info_log('光标按下')
             ac.w3c_actions.pointer_action.move_to_location(end_x, end_y)  # 滑动
-            print('正在滑动')
+            print_info_log('正在滑动')
             ac.w3c_actions.pointer_action.release()  # 抬起鼠标
-            print(f'光标从{end_coord}抬起')
+            print_info_log(f'光标从{end_coord}抬起')
             ac.perform()
-            print(f'第{i}次滑动完成')
-        print('滑动操作完成')
+            print_info_log(f'第{i}次滑动完成')
+        print_info_log('滑动操作完成')
 
     def key_repeat_click_ele(self, loc, times):
         el = self.find_element(loc)
         actions = ActionChains(self.driver)
+        print_info_log('正在执行重复点击')
         for i in range(1, times + 1):
-            print(f'第{i}次点击')
+            print_info_log(f'第{i}次点击')
             actions.w3c_actions.pointer_action.click_and_hold(el)
             actions.w3c_actions.pointer_action.pause(0.1)
             actions.w3c_actions.pointer_action.release()
@@ -254,49 +257,110 @@ class KeyWord:
         :return: None
         """
         size = self.driver.get_window_size()
-        print(size)
         x = size['width']
         y = size['height']
         if direction == 'right':
-            print('正在向右滑动屏幕')
+            print_info_log('正在向右滑动屏幕')
             for i in range(1, times + 1):
                 self.driver.swipe(x * 0.2, y * 0.5, x * 0.95, y * 0.5, 700)
-                print(f'正在滑动第{i}次')
+                print_info_log(f'正在滑动第{i}次')
                 time.sleep(0.2)
-            print('滑动结束')
+            print_info_log('滑动结束')
         elif direction == 'left':
-            print('正在向左滑动屏幕')
+            print_info_log('正在向左滑动屏幕')
             for i in range(1, times + 1):
                 self.driver.swipe(x * 0.8, y * 0.5, x * 0.05, y * 0.5, 700)
-                print(f'正在滑动第{i}次')
+                print_info_log(f'正在滑动第{i}次')
                 time.sleep(0.2)
-            print('滑动结束')
+            print_info_log('滑动结束')
         elif direction == 'up':
-            print('正在向上滑动屏幕')
+            print_info_log('正在向上滑动屏幕')
             for i in range(1, times + 1):
                 self.driver.swipe(x * 0.5, y * 0.8, x * 0.5, y * 0.2, 700)
-                print(f'正在滑动第{i}次')
+                print_info_log(f'正在滑动第{i}次')
                 time.sleep(0.2)
-            print('滑动结束')
+            print_info_log('滑动结束')
         elif direction == 'down':
-            print('正在向下滑动屏幕')
+            print_info_log('正在向下滑动屏幕')
             for i in range(1, times + 1):
                 self.driver.swipe(x * 0.5, y * 0.2, x * 0.5, y * 0.8, 700)
-                print(f'正在滑动第{i}次')
+                print_info_log(f'正在滑动第{i}次')
                 time.sleep(0.2)
-            print('滑动结束')
+            print_info_log('滑动结束')
 
     def key_long_press_ele(self, loc, duration):
         el = self.find_element(loc)
         actions = ActionChains(self.driver)
+        print_info_log('正在按下并保持')
         actions.w3c_actions.pointer_action.click_and_hold(el)
         actions.w3c_actions.pointer_action.pause(duration)
+        print_info_log('光标已释放')
         actions.w3c_actions.pointer_action.release()
         actions.perform()
+        print_info_log('长按已结束')
 
-    def key_double_click_ele(self, loc):  # 待验证，执行会报错
+    def key_double_click_ele(self, loc):  # 待验证，执行会报错.............................
         el = self.find_element(loc)
         actions = ActionChains(self.driver)
+        print_info_log('正在双击元素')
         actions.w3c_actions.pointer_action.double_click(el)
         actions.w3c_actions.pointer_action.release()
         actions.perform()
+        print_info_log('双击成功')
+        # actions = ActionChains(self.driver)
+        # actions.move_to_element(el)
+        # print_info_log('正在双击元素')
+        # actions.double_click()
+        # actions.perform()
+        # print_info_log('双击元素完成')
+    def key_key_event(self, event_code):
+        keycode_list = {
+            "5": "拨号键",
+            "6": "挂机键",
+            "3": "Home键",
+            "26": "电源键",
+            "4": "返回键",
+            "82": "菜单键",
+            "27": "拍照键",
+            "91": "话筒静音键",
+            "164": "扬声器静音键",
+            "24": "音量增加键",
+            "25": "音量减小键",
+            "23": "导航键 确定键",
+            "92": "向上翻页键",
+            "93": "向下翻页键",
+            "67": "退格键",
+            "112": "删除键",
+        }
+        key_name = keycode_list[str(event_code)]
+        print_info_log(f'正在执行{key_name}事件')
+        self.driver.keyevent(event_code)
+        time.sleep(0.5)
+
+    def key_un_lock(self, key):
+        actions = ActionChains(self.driver)
+
+        p_l = [
+            (380, 1666),
+            (718, 1666),
+            (1055, 1666),
+            (380, 2000),
+            (710, 1640),
+            (718, 2000),
+            (380, 2341),
+            (713, 2345),
+            (1060, 2340)
+        ]
+        password = str(key)
+        print_info_log('正在解锁九宫格')
+        for i, p in enumerate(password):  # 枚举循环
+            index = int(p) - 1  # 取出密码图案每个点位的下标
+            x, y = p_l[index]
+            actions.w3c_actions.pointer_action.move_to_location(x, y)
+            if i == 0:
+                print_info_log('按下手指')
+                actions.w3c_actions.pointer_action.pointer_down()
+        print_info_log('抬起手指')
+        actions.w3c_actions.pointer_action.release()
+        actions.perform()
+        print_info_log('九宫格解锁完毕')

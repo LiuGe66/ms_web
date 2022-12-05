@@ -1,1 +1,1 @@
-[{"uid":"d31f1e22c41340fa","name":"test_[首页]","time":{"start":1670156450925,"stop":1670156461820,"duration":10895},"status":"broken","severity":"normal"}]
+[{"uid":"b0426e4dedf11d3b","name":"test_[首页]","time":{"start":1670233542231,"stop":1670233560851,"duration":18620},"status":"failed","severity":"normal"}]

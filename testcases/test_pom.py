@@ -2,7 +2,7 @@
 # Author:liu_ge
 # @FileName: test_pom.py
 # @Time : 2022/11/24 22:38
-from logs.log import logger
+
 import pytest
 from core import pom
 

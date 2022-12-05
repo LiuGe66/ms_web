@@ -2,7 +2,7 @@
 # Author:liu_ge
 # @FileName: pom.py
 # @Time : 2022/11/24 21:07
-from core.excel_kdt import logger
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
@@ -32,9 +32,9 @@ class BasePage:
 
     def find_element(self, *args):
         # 封装过的元素定位方法，自动使用显示等待
-        logger.info(f"正在定位元素{args}")
+        print(f"正在定位元素{args}")
         el = self.wait.until(lambda _: self.driver.find_element(*args))
-        logger.info("元素定位成功")
+        print("元素定位成功")
         return el
 
     def _input(self, ele: WebElement, content=None):

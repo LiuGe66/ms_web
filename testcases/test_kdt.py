@@ -3,7 +3,6 @@
 # @FileName: test_kdt.py
 # @Time : 2022/11/26 10:58
 import time
-from logs.log import logger
 import pytest
 from core.kdt import KeyWord
 
