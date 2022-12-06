@@ -23,8 +23,7 @@ class UISettings(BaseSettings):
     gui: bool = True
     # 是否全屏
     window_max: bool = False
-    # 报告是否截图
-    is_screenshot: bool = True
+
     # 主页地址
     home_url: str = 'http://shop-xo.hctestedu.com'
     # 是否截图
@@ -37,6 +36,9 @@ class UISettings(BaseSettings):
     grid_url: str = ''
 
     use_grid: bool = False
+
+    # 日志清理门限值
+    logs_num_clear: int = 10
 
 
 # 载入ini文件内容

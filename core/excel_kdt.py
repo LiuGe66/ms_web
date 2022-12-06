@@ -9,7 +9,7 @@ import allure
 import pytest
 from openpyxl.reader.excel import load_workbook
 from core.kdt import KeyWord
-from logs.logger_utils import *
+from utils.logger_utils import *
 
 
 def filter_empty(old_l):
@@ -68,7 +68,7 @@ def create_case(test_suite: dict, file):
             def test_(self, case):
                 case_name = (case[0])
 
-                print_warning_log(f"----------------{suite_name}.{case_name}测试开始----------------")
+                print_warning_log(f"----------------{suite_name}--{case_name}测试开始----------------")
                 step_list = case[1]
                 kw = KeyWord(request=self.request)  # 不传递driver，传递pytest
 
@@ -107,9 +107,9 @@ def create_case(test_suite: dict, file):
                                 )
 
                         print_info_log(f"执行关键字：{key=}成功")
-                    print_warning_log(f"----------------{suite_name}.{case_name}测试结束----------------")
+                    print_warning_log(f"----------------{suite_name}--{case_name}测试结束----------------")
                 except Exception as e:
-                    print_error_log(f'{suite_name}.{case_name}测试失败')
+                    print_error_log(f'{suite_name}--{case_name}测试失败')
                     raise e
 
         print_debug_log(f"生成了测试用例{suite_name}")

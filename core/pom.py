@@ -9,7 +9,6 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.wait import WebDriverWait
 
 
-
 class BasePage:
 
     def __init__(self, driver: WebDriver):

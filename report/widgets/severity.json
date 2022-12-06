@@ -1,1 +1,1 @@
-[{"uid":"b0426e4dedf11d3b","name":"test_[首页]","time":{"start":1670233542231,"stop":1670233560851,"duration":18620},"status":"failed","severity":"normal"}]
+[{"uid":"34925736788f873b","name":"test_[登录]","time":{"start":1670341591292,"stop":1670341601236,"duration":9944},"status":"passed","severity":"normal"}]

@@ -1,1 +1,1 @@
-{"2654dac0afbe2ac7b79faf9e37f0808b":{"statistic":{"failed":1,"broken":0,"skipped":0,"passed":0,"unknown":0,"total":1},"items":[{"uid":"b0426e4dedf11d3b","status":"failed","statusDetails":"AssertionError: app自动化.首页测试失败","time":{"start":1670233542231,"stop":1670233560851,"duration":18620}}]}}
+{"a715dd9a6b59963bb9144481cc3dc608":{"statistic":{"failed":0,"broken":0,"skipped":0,"passed":1,"unknown":0,"total":1},"items":[{"uid":"34925736788f873b","status":"passed","time":{"start":1670341591292,"stop":1670341601236,"duration":9944}}]}}

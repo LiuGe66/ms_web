@@ -5,31 +5,73 @@
 import json
 import os
 import shutil
-import time
-from webdriver_helper import debugger, get_webdriver
+
 from pathlib import Path
 import pytest
 from selenium import webdriver
 from core import pom
 from core.setting import ui_setting
 from selenium.webdriver.firefox.options import Options
-from logs.logger_utils import *
+from utils.logger_utils import *
 
 
-def chrome_no_gui_driver():
-    options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
-    options.add_argument("--disable-gpu")
-    no_gui_driver = webdriver.Chrome(chrome_options=options)
-    return no_gui_driver
+# @pytest.fixture(scope="session", autouse=True)
+def start_appium():
+    flag = 0
+    while flag == 0:
+        result = os.popen('netstat -aon|findstr "4723"')  # 查询端口占用情况
+        time.sleep(1)
+        content = result.read()  # 读取cmd窗口返回的文本内容
+        # if "ESTABLISHED" in content:
+        if "4723" in content and "LISTENING" in content:  # 如果4723端口被占用则退出
+            # "127.0.0.1:4723"
+            print_warning_log('========================Appium服务已就绪========================')
+            flag = 1
+            break
+        else:  # 如果4723端口没被占用则启动appium服务
+            print_warning_log('========================准备启动Appium服务========================')
+            time_str = str(
+                time.strftime('%Y_%m_%d %H-%M-%S', time.localtime(time.time())))
+            os.system(f'start /b appium > D:\\Python_project\\ui_1129\\logs\\logs\\{time_str}.txt 2>&1 &')
+            time.sleep(5)
+
+def chrome_driver():
+    if ui_setting.gui:
+        options = webdriver.ChromeOptions()
+        driver = webdriver.Chrome(chrome_options=options)
+        if ui_setting.window_max:
+            driver.maximize_window()
+            print_info_log('正在以最大化窗口运行浏览器')
+        return driver
+    elif not ui_setting.gui:
+        options = webdriver.ChromeOptions()
+        options.add_argument("--headless")
+        options.add_argument("--disable-gpu")
+        no_gui_driver = webdriver.Chrome(chrome_options=options)
+        print_info_log('正在以无界面模式运行浏览器')
+        if ui_setting.window_max:
+            no_gui_driver.maximize_window()
+            print_info_log('正在以最大化窗口运行浏览器')
+        return no_gui_driver
 
 
-def firefox_no_gui_driver():
-    options = Options()
-    options.add_argument('--headless')
-    options.add_argument("--disable-gpu")
-    no_gui_driver = webdriver.Firefox(options=options)
-    return no_gui_driver
+def firefox_driver():
+    if not ui_setting.gui:
+        options = Options()
+        options.add_argument('--headless')
+        options.add_argument("--disable-gpu")
+        no_gui_driver = webdriver.Firefox(options=options, log_path=os.getcwd() + '\\logs\\')
+        print_info_log('正在以无界面模式运行浏览器')
+        if ui_setting.window_max:
+            no_gui_driver.maximize_window()
+            print_info_log('正在以最大化窗口运行浏览器')
+        return no_gui_driver
+    elif ui_setting.gui:
+        driver = webdriver.Firefox(log_path=os.getcwd()+'\\logs\\')
+        if ui_setting.window_max:
+            driver.maximize_window()
+            print_info_log('正在以最大化窗口运行浏览器')
+        return driver
 
 
 @pytest.fixture(scope="session")
@@ -37,47 +79,20 @@ def driver():
     if not ui_setting.cap_png:
         print_info_log('截图功能已关闭')
     if ui_setting.driver_type == "firefox":
-
         print_info_log('正在使用Firefox浏览器')
-        if not ui_setting.gui:
-            driver_ = firefox_no_gui_driver()
+        driver_ = firefox_driver()
+        yield driver_
+        driver_.quit()
 
-            print_info_log('正在以无界面模式运行浏览器')
-            if ui_setting.window_max:
-                driver_.maximize_window()
-
-                print_info_log('正在以最大化窗口运行浏览器')
-            yield driver_
-            driver_.quit()
-        elif ui_setting.gui:
-            driver_ = webdriver.Firefox()
-            if ui_setting.window_max:
-                driver_.maximize_window()
-
-                print_info_log('正在以最大化窗口运行浏览器')
-            yield driver_
-            driver_.quit()
     elif ui_setting.driver_type == "chrome":
-
         print_info_log('正在使用Chrome浏览器')
-        if not ui_setting.gui:
-            driver_ = chrome_no_gui_driver()
+        driver_ = chrome_driver()
+        if ui_setting.window_max:
+            driver_.maximize_window()
+            print_info_log('正在以最大化窗口运行浏览器')
+        yield driver_
+        driver_.quit()
 
-            print_info_log('正在以无界面模式运行浏览器')
-            if ui_setting.window_max:
-                driver_.maximize_window()
-
-                print_info_log('正在以最大化窗口运行浏览器')
-            yield driver_
-            driver_.quit()
-        elif ui_setting.gui:
-            driver_ = webdriver.Chrome()
-            if ui_setting.window_max:
-                driver_.maximize_window()
-
-                print_info_log('正在以最大化窗口运行浏览器')
-            yield driver_
-            driver_.quit()
 
 
 def set_cookies(driver):
@@ -85,19 +100,26 @@ def set_cookies(driver):
     path = Path('temp/cookies/cookies.json')
     if path.exists():
         cookies = json.loads(path.read_text())
-
+    print_info_log('正在尝试设置cookie')
     for cookie in cookies:
         try:
             driver.add_cookie(cookie)
-            # logger.info(f"设置cookie:{cookie}")
+            print_debug_log(f"设置cookie:{cookie}")
         except Exception as e:
             pass
-
+    print(f'设置cookies后访问主页{ui_setting.home_url}')
     driver.get(ui_setting.home_url)
 
 
 def is_login(driver):
-    return "退出" in driver.page_source
+    if "请输入搜索文字" in driver.page_source:
+        print_info_log('页面处于已登录状态')
+        flag = 1
+    else:
+        print_info_log('页面处于已未登录状态')
+        flag = 0
+
+    return flag
 
 
 @pytest.fixture(scope='session')
@@ -110,93 +132,57 @@ def user_driver():
         print_info_log('截图功能已关闭')
     if ui_setting.driver_type == "chrome":
         print_info_log('正在使用Chrome浏览器')
-        if not ui_setting.gui:
-            driver = chrome_no_gui_driver()
-            print_info_log('正在以无界面模式运行浏览器')
-            if ui_setting.window_max:
-                driver.maximize_window()
-                print_info_log('正在以最大化窗口运行浏览器')
-            driver.get(ui_setting.home_url)
-            set_cookies(driver)  # 加载登录状态
+        driver = chrome_driver()
+        print_info_log('正在以无界面模式运行浏览器')
+        print_debug_log(f'user_driver夹具正在访问主页{ui_setting.home_url}')
+        driver.get(ui_setting.home_url)
+        set_cookies(driver)  # 加载登录状态
 
-            if not is_login(driver):
-                page = pom.HomePage(driver)
-                page = page.to_login()  # 跳转到登录页面
-                page.login(ui_setting.test_accounts, ui_setting.test_pwd)
-                msg = page.get_msg()
-                assert '登录成功' == msg
-                # 保存cookies到临时文件
-                cookies = driver.get_cookies()
-                with open("temp/cookies/cookies.json", "w") as f:
-                    f.write(json.dumps(cookies))
-
-            yield driver
-            driver.quit()
-        elif ui_setting.gui:
-            driver = get_webdriver()
-            if ui_setting.window_max:
-                driver.maximize_window()
-                print_info_log('正在以最大化窗口运行浏览器')
-            driver.get(ui_setting.home_url)
-            set_cookies(driver)  # 加载登录状态
-
-            if not is_login(driver):
-                page = pom.HomePage(driver)
-                page = page.to_login()  # 跳转到登录页面
-                page.login(ui_setting.test_accounts, ui_setting.test_pwd)
-                msg = page.get_msg()
-                assert '登录成功' == msg
-                # 保存cookies到临时文件
-                cookies = driver.get_cookies()
-                with open("temp/cookies/cookies.json", "w") as f:
-                    f.write(json.dumps(cookies))
-            yield driver
-            driver.quit()
+        if not is_login(driver):
+            page = pom.HomePage(driver)
+            page = page.to_login()  # 跳转到登录页面
+            page.login(ui_setting.test_accounts, ui_setting.test_pwd)
+            msg = page.get_msg()
+            assert '登录成功' == msg
+            print_info_log('保存cookies到临时文件')
+            cookies = driver.get_cookies()
+            with open("temp/cookies/cookies.json", "w") as f:
+                f.write(json.dumps(cookies))
+        yield driver
+        driver.quit()
 
     elif ui_setting.driver_type == "firefox":
         print_info_log('正在使用Firefox浏览器')
-        if not ui_setting.gui:
-            driver = firefox_no_gui_driver()
-            print_info_log('正在以无界面模式运行浏览器')
-            if ui_setting.window_max:
-                driver.maximize_window()
-                print_info_log('正在以最大化窗口运行浏览器')
-            driver.get(ui_setting.home_url)
-            set_cookies(driver)  # 加载登录状态
-            if not is_login(driver):
-                print_info_log('正在重新登录')
-                page = pom.HomePage(driver)
-                page = page.to_login()  # 跳转到登录页面
-                page.login(ui_setting.test_accounts, ui_setting.test_pwd)
-                msg = page.get_msg()
-                assert '登录成功' == msg
-                # 保存cookies到临时文件
-                cookies = driver.get_cookies()
-                with open("temp/cookies/cookies.json", "w") as f:
-                    f.write(json.dumps(cookies))
+        driver = firefox_driver()
+        print_debug_log(f'user_driver夹具正在访问主页{ui_setting.home_url}')
+        driver.get(ui_setting.home_url)
+        set_cookies(driver)  # 加载登录状态
+        if not is_login(driver):
+            print_info_log('正在重新登录')
+            page = pom.HomePage(driver)
+            page = page.to_login()  # 跳转到登录页面
+            page.login(ui_setting.test_accounts, ui_setting.test_pwd)
+            msg = page.get_msg()
+            assert '登录成功' == msg
+            print_info_log('保存cookies到临时文件')
+            cookies = driver.get_cookies()
+            with open("temp/cookies/cookies.json", "w") as f:
+                f.write(json.dumps(cookies))
+        yield driver
+        driver.quit()
 
-            yield driver
-            driver.quit()
-        elif ui_setting.gui:
-            driver = webdriver.Firefox()
-            if ui_setting.window_max:
-                driver.maximize_window()
-                print_info_log('正在以最大化窗口运行浏览器')
-            driver.get(ui_setting.home_url)
-            set_cookies(driver)  # 加载登录状态
-
-            if not is_login(driver):
-                page = pom.HomePage(driver)
-                page = page.to_login()  # 跳转到登录页面
-                page.login(ui_setting.test_accounts, ui_setting.test_pwd)
-                msg = page.get_msg()
-                assert '登录成功' == msg
-                # 保存cookies到临时文件
-                cookies = driver.get_cookies()
-                with open("temp/cookies/cookies.json", "w") as f:
-                    f.write(json.dumps(cookies))
-            yield driver
-            driver.quit()
+        if not is_login(driver):
+            page = pom.HomePage(driver)
+            page = page.to_login()  # 跳转到登录页面
+            page.login(ui_setting.test_accounts, ui_setting.test_pwd)
+            msg = page.get_msg()
+            assert '登录成功' == msg
+            print_info_log('保存cookies到临时文件')
+            cookies = driver.get_cookies()
+            with open("temp/cookies/cookies.json", "w") as f:
+                f.write(json.dumps(cookies))
+        yield driver
+        driver.quit()
 
 
 @pytest.fixture()
@@ -263,6 +249,7 @@ def start_app():
 
     # 微信
     from appium.webdriver import Remote as a_Remote
+    start_appium()
     caps = {
         "appium:platformName": "Android",
         "appium:deviceName": "1a44c444fb0b7ece",
@@ -277,31 +264,14 @@ def start_app():
     driver.quit()
 
 
-def start_appium():
-    flag = 0
-    while flag == 0:
-        result = os.popen('netstat -aon|findstr "4723"')  # 查询端口占用情况
-        time.sleep(1)
-        content = result.read()  # 读取cmd窗口返回的文本内容
-        # if "ESTABLISHED" in content:
-        if "127.0.0.1:4723" in content:  # 如果4723端口被占用则退出
-            # "127.0.0.1:4723"
-            print_warning_log('Appium服务已就绪')
-            flag = 1
-        else:  # 如果4723端口没被占用则启动appium服务
-            print_warning_log('准备启动Appium服务')
-            os.system('start /b appium')
-            time.sleep(10)
-
-
 @pytest.fixture(scope="session", autouse=True)
 def clear_logs():
     path = os.getcwd()
-    files_count = len(os.listdir(path + "\\logs\\logs\\"))
+    files_count = len(os.listdir(path + "\\logs\\"))
     num = 10
     if files_count >= num:
         # 先强制删除指定目录
-        shutil.rmtree(path + "\\logs\\logs\\")
+        shutil.rmtree(path + "\\logs\\")
         # 再新建一个同名目录
-        os.mkdir(path + "\\logs\\logs\\")
+        os.mkdir(path + "\\logs\\")
         print_info_log("log数量超过{}条，日志目录已清空".format(num))

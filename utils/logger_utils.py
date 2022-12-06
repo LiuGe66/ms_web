@@ -5,7 +5,6 @@
 import logging
 import os
 import time
-
 import colorlog
 import yaml
 
@@ -33,10 +32,10 @@ def print_warning_log(message):
 class LoggerUtils:
 
     def get_new_path(self):
-        return os.getcwd().split("logs")[0]
+        return os.getcwd().split("utils")[0]
 
     def read_config_log(self, one_key, two_key):
-        with open(os.getcwd() + "/logs/config.yaml", mode="r", encoding="utf-8") as f:
+        with open(os.getcwd() + "/utils/config.yaml", mode="r", encoding="utf-8") as f:
             result = yaml.load(stream=f, Loader=yaml.FullLoader)
             return result[one_key][two_key]
 
@@ -49,7 +48,7 @@ class LoggerUtils:
         if not self.logger.handlers:
             #################################信息日志#################################
             # 文件日志的名称规范
-            log_file_path = self.get_new_path() + "/logs/logs/" + self.read_config_log("log", "log_file_name") + str(
+            log_file_path = self.get_new_path() + "/logs/" + self.read_config_log("log", "log_file_name") + str(
                 time.strftime('%Y_%m_%d   %H-%M-%S', time.localtime(time.time()))) + ".log"
             # 2.创建一个文件日志控制控制器
             file_handler = logging.FileHandler(log_file_path, encoding="utf-8")
@@ -75,9 +74,9 @@ class LoggerUtils:
             #################################控制台日志#################################
             log_colors_config = {
                 'DEBUG': 'white',
-                'INFO': 'green',
-                'WARNING': 'yellow',
-                'ERROR': 'red',
+                'INFO': 'bold_green',
+                'WARNING': 'bold_yellow',
+                'ERROR': 'bold_red',
                 'CRITICAL': 'bold_red'
             }
 

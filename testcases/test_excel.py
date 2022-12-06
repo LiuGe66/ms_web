@@ -4,7 +4,7 @@
 # @Time : 2022/11/27 11:48
 from pathlib import Path
 from core.excel_kdt import data_by_excel, create_case
-from logs.logger_utils import *
+from utils.logger_utils import *
 
 test_dir = Path(__file__).parent.parent / 'excel_data/'
 file_list = test_dir.glob('test_*.xlsx')  # 自动收集excel文件

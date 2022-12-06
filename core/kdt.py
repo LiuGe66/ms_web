@@ -2,12 +2,11 @@
 # Author:liu_ge
 # @FileName: pom.py
 # @Time : 2022/11/24 21:07
-import inspect
-import time
 import allure
 from selenium import webdriver
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
+
 from core.setting import ui_setting
 from appium.webdriver.common.appiumby import AppiumBy
 from appium import webdriver
@@ -17,7 +16,8 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.common.actions.pointer_actions import PointerActions
 from selenium.webdriver.common.action_chains import ActionChains
 
-from logs.logger_utils import *
+from utils.logger_utils import *
+from utils.database_utils import DataBaseUtil
 
 
 class MyActionChains(ActionChains):
@@ -81,10 +81,10 @@ class KeyWord:
     def key_click(self, loc):
         ele = self.find_element(loc)
         self.wait.until(lambda _: ele.is_enabled())
-        try:
-            self.driver.execute_script('arguments[0].style="border: 5px solid #f83030 ;"', ele)
-        except Exception as e:
-            print_info_log('不支持元素添加样式')
+        # try:
+        #     self.driver.execute_script('arguments[0].style="border: 5px solid #f83030 ;"', ele)
+        # except Exception as e:
+        #     print_info_log('不支持元素添加样式')
         print_info_log(f'正在点击:{loc}')
         ele.click()
         print_info_log(f'点击成功:{loc}')
@@ -123,26 +123,8 @@ class KeyWord:
             print_error_log(f"元素{loc=}定位失败")
             raise e
 
-    @allure.step('文本相等断言')
-    def key_assert_equal_text(self, loc, expect_text):
-        ele = self.wait.until(
-            lambda _: self.find_element(loc)
-        )
-        try:
-            self.driver.execute_script('arguments[0].style="border: 5px solid #f83030 ;"', ele)
-        except Exception as e:
-            print_info_log('不支持元素添加样式')
-        ele_text = ele.text
-        ele_text = ele_text.strip()
-        expect_text = expect_text.strip()
-        print_info_log(f"期望结果:{expect_text}")
-        if ele_text == expect_text:
-            print_info_log("相等断言成功，当前步骤测试通过")
-        assert ele_text == expect_text, print_error_log("断言失败,'{}'不等于'{}'".format(ele_text, expect_text))
-
-    @allure.step('文本包含断言')
-    def key_assert_contains_text(self, loc, expect_text):
-        print_info_log('正在进行文本包含断言')
+    @allure.step('元素文本断言')
+    def key_assert_text(self, loc, expect_value):
         try:
             ele = self.wait.until(
                 lambda _: self.find_element(loc)
@@ -153,18 +135,70 @@ class KeyWord:
             self.driver.execute_script('arguments[0].style="border: 5px solid #f83030 ;"', ele)
         except Exception as e:
             print_info_log('不支持元素添加样式')
+        l_ = expect_value.split(":")
+        if len(l_) == 1:
+            l_.insert(0, "相等")  # 如果没有指定，默认为相等
+        assert_type, expect_value, *_ = l_
+        if assert_type == "相等":
+            print_info_log('正在进行元素文本相等断言')
+            try:
+                self.driver.execute_script('arguments[0].style="border: 5px solid #f83030 ;"', ele)
+            except Exception as e:
+                print_info_log('不支持元素添加样式')
+            ele_text = ele.text
+            ele_text = ele_text.strip()
+            expect_text = expect_value.strip()
+            if ele_text == expect_text:
+                print_info_log(f"断言成功,'{ele_text}'等于'{expect_text}'")
+            assert ele_text == expect_text, print_error_log(f"断言失败,'{ele_text}'不等于'{expect_text}'")
+        elif assert_type == "包含":
+            print_info_log('正在进行元素文本包含断言')
+            ele_text = ele.text
+            ele_text = ele_text.strip()
+            expect_text = expect_value.strip()
+            if expect_text in ele_text:
+                flag = True
+                print_info_log("包含断言成功，当前步骤通过")
+            else:
+                flag = False
+            assert flag, print_error_log("断言失败,'{}'不在'{}'中".format(expect_text, ele_text))
 
-        ele_text = ele.text
-        ele_text = ele_text.strip()
-        expect_text = expect_text.strip()
-        print_info_log(f'实际结果:{ele_text}')
-        print_info_log(f"期望结果:{expect_text}")
-        if expect_text in ele_text:
-            flag = True
-            print_info_log("包含断言成功，当前步骤通过")
+    @allure.step('源码包含断言')
+    def key_assert_resource_contains_text(self, expect_text):
+        print_info_log('正在进行源码包含断言')
+        print_info_log(f"期望源码包含:{expect_text}")
+        resource_text = self.driver.page_source
+        if expect_text in resource_text:
+            print_info_log("源码包含断言成功")
         else:
-            flag = False
-        assert flag, print_error_log("断言失败,'{}'不在'{}'中".format(expect_text, ele_text))
+            assert 0, print_error_log(f'源码包含断言失败,"{expect_text}"不在源码中')
+
+    def key_assert_database(self, sql, expect_value):
+        """
+        数据库断言方法
+        :param sql: sql查询语句
+        :param expect_value: 期望结果参数。默认为相等断言，如果想要做包含断言则语法为："包含:手机", 注意：excel表格里不用填双引号，其中的冒号是英文
+        :return:
+        """
+        db = DataBaseUtil()
+        actual_value = db.execute_sql(sql)
+        sql_result_str = ','.join(actual_value)
+        l_ = expect_value.split(":")
+        if len(l_) == 1:
+            l_.insert(0, "相等")  # 如果没有指定，默认为相等
+        assert_type, expect_value, *_ = l_
+        if assert_type == "相等":
+            print_info_log('正在进行数据库相等断言')
+            if sql_result_str == expect_value:
+                print_info_log(f'数据库断言通过,"{expect_value}"等于"{sql_result_str}"')
+            else:
+                print_error_log(f'数据库断言失败,"{expect_value}"不等于"{sql_result_str}"')
+        elif assert_type == "包含":
+            print_info_log('正在进行数据库包含断言')
+            if expect_value in sql_result_str:
+                print_info_log(f'数据库断言通过,"{expect_value}"包含于"{sql_result_str}"')
+            else:
+                print_info_log(f'数据库断言失败,"{expect_value}"不包含在"{sql_result_str}"内')
 
     def key_driver_fixture(self, fixture_name):
         """
@@ -209,6 +243,9 @@ class KeyWord:
         el = wait.until(ec.presence_of_element_located((MobileBy.XPATH, loc)))
         print_info_log("Toast元素定位成功")
         return el
+
+    def key_sleep(self, time_):
+        time.sleep(time_)
 
     def key_absolutely_swipe(self, start_coord, end_coord, times):
         """
@@ -313,6 +350,7 @@ class KeyWord:
         # actions.double_click()
         # actions.perform()
         # print_info_log('双击元素完成')
+
     def key_key_event(self, event_code):
         keycode_list = {
             "5": "拨号键",
