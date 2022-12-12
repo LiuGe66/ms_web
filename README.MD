@@ -19,7 +19,6 @@
     report: 测试报告目录
     temp: 测试报告原始数据、cookies等文件目录
     testcases: 测试脚本文件目录
-    utils: 工具目录
     conftest.py: 夹具模块
     pytest.ini: pytest及代码配置文件
     main.py: 框架入口文件

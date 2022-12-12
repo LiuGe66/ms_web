@@ -2,11 +2,15 @@
 # Author:liu_ge
 # @FileName: pom.py
 # @Time : 2022/11/24 21:07
+import time
+
 import allure
 from selenium import webdriver
+from selenium.webdriver import Keys
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
-
+from selenium.webdriver.support.select import Select
+from webdriver_helper import debugger
 from core.setting import ui_setting
 from appium.webdriver.common.appiumby import AppiumBy
 from appium import webdriver
@@ -15,7 +19,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.common.actions.pointer_actions import PointerActions
 from selenium.webdriver.common.action_chains import ActionChains
-
 from utils.logger_utils import *
 from utils.database_utils import DataBaseUtil
 
@@ -81,10 +84,6 @@ class KeyWord:
     def key_click(self, loc):
         ele = self.find_element(loc)
         self.wait.until(lambda _: ele.is_enabled())
-        # try:
-        #     self.driver.execute_script('arguments[0].style="border: 5px solid #f83030 ;"', ele)
-        # except Exception as e:
-        #     print_info_log('不支持元素添加样式')
         print_info_log(f'正在点击:{loc}')
         ele.click()
         print_info_log(f'点击成功:{loc}')
@@ -109,6 +108,7 @@ class KeyWord:
 
         try:
             print_info_log(f"正在定位元素{loc=}")
+
             el: WebElement = self.wait.until(lambda _: self.driver.find_element(by, value))
             try:
                 self.driver.execute_script('arguments[0].style="border: 5px solid #f83030 ;"', el)
@@ -340,8 +340,11 @@ class KeyWord:
         el = self.find_element(loc)
         actions = ActionChains(self.driver)
         print_info_log('正在双击元素')
-        actions.w3c_actions.pointer_action.double_click(el)
-        actions.w3c_actions.pointer_action.release()
+        # actions.w3c_actions.pointer_action.double_click(el)
+        # actions.w3c_actions.pointer_action.release()
+        actions.double_click(el)
+        time.sleep(0.05)
+        actions.release()
         actions.perform()
         print_info_log('双击成功')
         # actions = ActionChains(self.driver)
@@ -402,3 +405,75 @@ class KeyWord:
         actions.w3c_actions.pointer_action.release()
         actions.perform()
         print_info_log('九宫格解锁完毕')
+
+    def key_action_chains_keyboard(self, key_name, times=None):
+        """
+        键盘操作
+        :param key_name: 键名
+        :param times: 执行次数
+        :return:
+        """
+        ac = ActionChains(self.driver)
+        if key_name.islower() and len(key_name) == 1:
+            print_error_log(f'如果想要输入字母按键，请将"{key_name}"大写')
+        if key_name.isupper() and len(key_name) == 1:
+            key_name = key_name.lower()
+            if times:
+                for i in range(1, times + 1):
+                    ac.send_keys(key_name)
+                    ac.perform()
+                    time.sleep(0.2)
+            elif not times:
+                ac.send_keys(key_name)
+                ac.perform()
+                time.sleep(0.2)
+        else:
+            key_name = key_name.upper()  # 字串转大写
+            if times:  # 如果有次数参数就循环操作
+                for i in range(1, times + 1):
+                    print_info_log(f'第{i}次按下{key_name}键')
+                    keys = getattr(Keys, key_name)
+                    ac.send_keys(keys)
+                    ac.perform()
+                    time.sleep(0.2)
+                print_info_log(f'{key_name}键操作完成')
+            elif not times:  # 没有次数参数就操作1次
+                print_info_log(f'按下"{key_name}"键')
+                keys = getattr(Keys, key_name)
+                ac.send_keys(keys)
+                ac.perform()
+                print_info_log(f'"{key_name}"键操作完成')
+                time.sleep(0.2)
+
+    def key_keyboard_down(self, key_name):
+        key_name = key_name.upper()  # 字串转大写
+        ac = ActionChains(self.driver)
+        keys = getattr(Keys, key_name)
+        print_info_log(f'正在按下"{key_name}"键')
+        ac.key_down(keys)
+        ac.perform()
+
+    def key_keyboard_up(self, key_name):
+        key_name = key_name.upper()  # 字串转大写
+        ac = ActionChains(self.driver)
+        keys = getattr(Keys, key_name)
+        print_info_log(f'正在抬起"{key_name}"键')
+        ac.key_up(keys)
+        ac.perform()
+
+    def key_select_box(self, loc, select_args):
+        """
+        选择下拉菜单的关键字
+        :param loc:
+        :param select_args:select_by_visible_text->选项可视文本;select_by_index->选项索引;select_by_value->选项value.
+        :return:
+        """
+        l_ = select_args.split(";;")
+        if len(l_) == 1:
+            l_.append("select_by_visible_text")  # 如果没有指定，默认为select_by_visible_text
+        value, by, *_ = l_
+        el = self.find_element(loc)
+        select = Select(el)
+        print_info_log(f'正在选择下拉菜单"{value}"')
+        getattr(select, by)(value)
+        print_info_log(f'选择下拉菜单"{value}"成功')

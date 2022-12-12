@@ -2,7 +2,6 @@
 # Author:liu_ge
 # @FileName: excel_data.py
 # @Time : 2022/11/27 11:15
-
 from pathlib import Path
 from core.setting import ui_setting
 import allure
@@ -10,6 +9,8 @@ import pytest
 from openpyxl.reader.excel import load_workbook
 from core.kdt import KeyWord
 from utils.logger_utils import *
+
+sheet_name = []
 
 
 def filter_empty(old_l):
@@ -57,6 +58,9 @@ def create_case(test_suite: dict, file):
     filename = file_path.name
 
     for suite_name, case_dict in test_suite.items():
+        sheet_name.append(suite_name)  # 将sheet页名存入列表
+        gen = (name for name in sheet_name)  # 产生一个生成器
+
         @allure.suite(filename)
         class Test:
             @pytest.fixture(autouse=True)
@@ -67,11 +71,11 @@ def create_case(test_suite: dict, file):
             @pytest.mark.parametrize('case', case_dict.items(), ids=case_dict.keys())
             def test_(self, case):
                 case_name = (case[0])
-
-                print_warning_log(f"----------------{suite_name}--{case_name}测试开始----------------")
                 step_list = case[1]
                 kw = KeyWord(request=self.request)  # 不传递driver，传递pytest
 
+                sheet_name_ = next(gen)  # 在生成器中取sheet页名
+                print_warning_log(f"----------------{sheet_name_}--'{case_name}'用例测试开始----------------")
                 try:
                     for step in step_list:
                         key = step[2]  # 关键字
@@ -81,7 +85,7 @@ def create_case(test_suite: dict, file):
 
                         try:
                             with allure.step(step[1]):
-                                f(*args)
+                                f(*args)  # 用例是在这里执行的
                                 if ui_setting.cap_png:
                                     allure.attach(
                                         kw.driver.get_screenshot_as_png(),
@@ -105,9 +109,8 @@ def create_case(test_suite: dict, file):
                                     step[1],
                                     allure.attachment_type.PNG,
                                 )
-
                         print_info_log(f"执行关键字：{key=}成功")
-                    print_warning_log(f"----------------{suite_name}--{case_name}测试结束----------------")
+                    print_warning_log(f"----------------{sheet_name_}--{case_name}测试用例测试结束----------------")
                 except Exception as e:
                     print_error_log(f'{suite_name}--{case_name}测试失败')
                     raise e

@@ -3,9 +3,7 @@
 # @FileName: conftest.py
 # @Time : 2022/11/24 16:15
 import json
-import os
 import shutil
-
 from pathlib import Path
 import pytest
 from selenium import webdriver
@@ -31,13 +29,16 @@ def start_appium():
         else:  # 如果4723端口没被占用则启动appium服务
             print_warning_log('========================准备启动Appium服务========================')
             time_str = str(
-                time.strftime('%Y_%m_%d %H-%M-%S', time.localtime(time.time())))
-            os.system(f'start /b appium > D:\\Python_project\\ui_1129\\logs\\logs\\{time_str}.txt 2>&1 &')
+                # time.strftime('%Y_%m_%d %H-%M-%S', time.localtime(time.time())))
+                time.strftime('%Y_%m_%d_%H%M%S', time.localtime(time.time())))
+            # os.system('start /b appium > D:\\Python_project\\ui_1129\\logs\\appium_{time_str}.log 2>&1 &')
+            os.system(f'start /b appium > D:\\Python_project\\ui_1129\\logs\\appium_logs\\appium_{time_str}.log 2>&1 &')
             time.sleep(5)
 
 def chrome_driver():
     if ui_setting.gui:
         options = webdriver.ChromeOptions()
+        options.add_argument(r'--user-data-dir=C:\Users\sixyco\AppData\Local\Google\Chrome\User Data\Default')
         driver = webdriver.Chrome(chrome_options=options)
         if ui_setting.window_max:
             driver.maximize_window()
@@ -45,6 +46,7 @@ def chrome_driver():
         return driver
     elif not ui_setting.gui:
         options = webdriver.ChromeOptions()
+        options.add_argument(r'--user-data-dir=C:\Users\sixyco\AppData\Local\Google\Chrome\User Data\Default')
         options.add_argument("--headless")
         options.add_argument("--disable-gpu")
         no_gui_driver = webdriver.Chrome(chrome_options=options)
@@ -60,14 +62,14 @@ def firefox_driver():
         options = Options()
         options.add_argument('--headless')
         options.add_argument("--disable-gpu")
-        no_gui_driver = webdriver.Firefox(options=options, log_path=os.getcwd() + '\\logs\\')
+        no_gui_driver = webdriver.Firefox(options=options, service_log_path='./logs/logs/geckodriver.log')
         print_info_log('正在以无界面模式运行浏览器')
         if ui_setting.window_max:
             no_gui_driver.maximize_window()
             print_info_log('正在以最大化窗口运行浏览器')
         return no_gui_driver
     elif ui_setting.gui:
-        driver = webdriver.Firefox(log_path=os.getcwd()+'\\logs\\')
+        driver = webdriver.Firefox(service_log_path='./logs/logs/geckodriver.log')
         if ui_setting.window_max:
             driver.maximize_window()
             print_info_log('正在以最大化窗口运行浏览器')
@@ -76,6 +78,7 @@ def firefox_driver():
 
 @pytest.fixture(scope="session")
 def driver():
+
     if not ui_setting.cap_png:
         print_info_log('截图功能已关闭')
     if ui_setting.driver_type == "firefox":
@@ -87,9 +90,6 @@ def driver():
     elif ui_setting.driver_type == "chrome":
         print_info_log('正在使用Chrome浏览器')
         driver_ = chrome_driver()
-        if ui_setting.window_max:
-            driver_.maximize_window()
-            print_info_log('正在以最大化窗口运行浏览器')
         yield driver_
         driver_.quit()
 
@@ -198,6 +198,8 @@ def clear_favor_driver(user_driver):
         yield user_driver
 
 
+
+
 @pytest.fixture(scope='session')
 def start_app():
     # master大师
@@ -267,11 +269,26 @@ def start_app():
 @pytest.fixture(scope="session", autouse=True)
 def clear_logs():
     path = os.getcwd()
-    files_count = len(os.listdir(path + "\\logs\\"))
-    num = 10
+    files_count = len(os.listdir(path + "\\logs\\logs"))
+    num = ui_setting.logs_num_clear
     if files_count >= num:
         # 先强制删除指定目录
-        shutil.rmtree(path + "\\logs\\")
+        shutil.rmtree(path + "\\logs\\logs")
         # 再新建一个同名目录
-        os.mkdir(path + "\\logs\\")
+        os.mkdir(path + "\\logs\\logs")
         print_info_log("log数量超过{}条，日志目录已清空".format(num))
+
+    # 清除appium日志
+    result = os.popen('netstat -aon|findstr "4723"')  # 查询端口占用情况
+    time.sleep(0.2)
+    content = result.read()  # 读取cmd窗口返回的文本内容
+    # if "ESTABLISHED" in content:
+    if "4723" not in content:  # 如果4723端口没被占用则判断是否超限
+        appium_files_count = len(os.listdir(path + "\\logs\\appium_logs\\"))
+        if appium_files_count >= num:
+            # 先强制删除指定目录
+            shutil.rmtree(path + "\\logs\\appium_logs\\")
+            # 再新建一个同名目录
+            os.mkdir(path + "\\logs\\appium_logs\\")
+            print_info_log("appium_log数量超过{}条，日志目录已清空".format(num))
+

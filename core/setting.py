@@ -3,7 +3,6 @@
 # @FileName: setting.py
 # @Time : 2022/11/29 10:10
 from pathlib import Path
-
 from iniconfig import IniConfig
 from pydantic import BaseSettings, DirectoryPath
 
@@ -16,7 +15,7 @@ class UISettings(BaseSettings):
     # 最大显式等待时间
     wait_max: float = 10
     # 显式等待轮询间隔
-    wait_poll: float = 0.01
+    wait_poll: float = 0.1
     # 浏览器类型
     driver_type: str = 'chrome'
     # 是否无界面运行
