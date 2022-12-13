@@ -35,22 +35,26 @@ def start_appium():
             os.system(f'start /b appium > D:\\Python_project\\ui_1129\\logs\\appium_logs\\appium_{time_str}.log 2>&1 &')
             time.sleep(5)
 
+
 def chrome_driver():
+    options = webdriver.ChromeOptions()
+    if ui_setting.browser_debugger:
+        print_warning_log('正在以debugger模式运行浏览器')
+        if ui_setting.first_debugger:
+            os.popen("D:\\tools\\chrome.bat")
+        options.debugger_address = "127.0.0.1:9222"
     if ui_setting.gui:
-        options = webdriver.ChromeOptions()
-        options.add_argument(r'--user-data-dir=C:\Users\sixyco\AppData\Local\Google\Chrome\User Data\Default')
         driver = webdriver.Chrome(chrome_options=options)
         if ui_setting.window_max:
             driver.maximize_window()
             print_info_log('正在以最大化窗口运行浏览器')
         return driver
     elif not ui_setting.gui:
-        options = webdriver.ChromeOptions()
-        options.add_argument(r'--user-data-dir=C:\Users\sixyco\AppData\Local\Google\Chrome\User Data\Default')
+        # options.add_argument(r'--user-data-dir=C:\Users\sixyco\AppData\Local\Google\Chrome\User Data\Default')
         options.add_argument("--headless")
         options.add_argument("--disable-gpu")
         no_gui_driver = webdriver.Chrome(chrome_options=options)
-        print_info_log('正在以无界面模式运行浏览器')
+        print_warning_log('正在以无界面模式运行浏览器')
         if ui_setting.window_max:
             no_gui_driver.maximize_window()
             print_info_log('正在以最大化窗口运行浏览器')
@@ -63,7 +67,7 @@ def firefox_driver():
         options.add_argument('--headless')
         options.add_argument("--disable-gpu")
         no_gui_driver = webdriver.Firefox(options=options, service_log_path='./logs/logs/geckodriver.log')
-        print_info_log('正在以无界面模式运行浏览器')
+        print_warning_log('正在以无界面模式运行浏览器')
         if ui_setting.window_max:
             no_gui_driver.maximize_window()
             print_info_log('正在以最大化窗口运行浏览器')
@@ -76,11 +80,30 @@ def firefox_driver():
         return driver
 
 
+def set_cookies(driver):
+    path = Path('temp/cookies/cookies.json')
+    print_info_log('访问默认主页')
+    driver.get(ui_setting.home_url)
+    cookies = driver.get_cookies()
+    with open("./temp/cookies/cookies.json", "w") as f:
+        f.write(json.dumps(cookies))
+    # if path.exists():
+    #     cookies = json.loads(path.read_text())
+    print_info_log('正在尝试设置cookie')
+    for cookie in cookies:
+        try:
+            driver.add_cookie(cookie)
+            print_debug_log(f"设置cookie:{cookie}")
+        except Exception as e:
+            pass
+    driver.refresh()
+
+
+
 @pytest.fixture(scope="session")
 def driver():
-
     if not ui_setting.cap_png:
-        print_info_log('截图功能已关闭')
+        print_warning_log('截图功能已关闭')
     if ui_setting.driver_type == "firefox":
         print_info_log('正在使用Firefox浏览器')
         driver_ = firefox_driver()
@@ -90,25 +113,29 @@ def driver():
     elif ui_setting.driver_type == "chrome":
         print_info_log('正在使用Chrome浏览器')
         driver_ = chrome_driver()
+        if ui_setting.set_cookies:
+            set_cookies(driver_)
         yield driver_
         driver_.quit()
 
 
+# def set_cookies(driver):
+#     cookies = []
+#     path = Path('temp/cookies/cookies.json')
+#     if path.exists():
+#         cookies = json.loads(path.read_text())
+#     print_info_log('正在尝试设置cookie')
+#     for cookie in cookies:
+#         try:
+#             driver.add_cookie(cookie)
+#             print_debug_log(f"设置cookie:{cookie}")
+#         except Exception as e:
+#             pass
+#     print(f'设置cookies后访问主页{ui_setting.home_url}')
+#     driver.get(ui_setting.home_url)
 
-def set_cookies(driver):
-    cookies = []
-    path = Path('temp/cookies/cookies.json')
-    if path.exists():
-        cookies = json.loads(path.read_text())
-    print_info_log('正在尝试设置cookie')
-    for cookie in cookies:
-        try:
-            driver.add_cookie(cookie)
-            print_debug_log(f"设置cookie:{cookie}")
-        except Exception as e:
-            pass
-    print(f'设置cookies后访问主页{ui_setting.home_url}')
-    driver.get(ui_setting.home_url)
+
+
 
 
 def is_login(driver):
@@ -196,8 +223,6 @@ def clear_favor_driver(user_driver):
     else:
         pass
         yield user_driver
-
-
 
 
 @pytest.fixture(scope='session')
@@ -291,4 +316,3 @@ def clear_logs():
             # 再新建一个同名目录
             os.mkdir(path + "\\logs\\appium_logs\\")
             print_info_log("appium_log数量超过{}条，日志目录已清空".format(num))
-

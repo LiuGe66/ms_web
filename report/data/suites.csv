@@ -1,5 +1,0 @@
-"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Mon Dec 12 14:56:51 GMT+08:00 2022","Mon Dec 12 14:56:54 GMT+08:00 2022","2845","testcases","test_excel.xlsx","Test_1_百度访问","","","test_[百度页面的键盘操作]",""
-"passed","Mon Dec 12 14:57:00 GMT+08:00 2022","Mon Dec 12 14:57:01 GMT+08:00 2022","1019","testcases","test_excel_测试多文件.xlsx","Test_3_百度访问","","","test_[百度页面的键盘操作]",""
-"passed","Mon Dec 12 14:57:01 GMT+08:00 2022","Mon Dec 12 14:57:03 GMT+08:00 2022","1471","testcases","test_excel_测试多文件.xlsx","Test_4_鼠标操作","","","test_[selenium官网鼠标操作练习]",""
-"passed","Mon Dec 12 14:56:54 GMT+08:00 2022","Mon Dec 12 14:57:00 GMT+08:00 2022","6121","testcases","test_excel.xlsx","Test_2_鼠标操作","","","test_[selenium官网鼠标操作练习]",""

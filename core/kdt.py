@@ -2,11 +2,12 @@
 # Author:liu_ge
 # @FileName: pom.py
 # @Time : 2022/11/24 21:07
+import random
 import time
-
 import allure
 from selenium import webdriver
 from selenium.webdriver import Keys
+from selenium.webdriver.common.actions.action_builder import ActionBuilder
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.select import Select
@@ -23,18 +24,18 @@ from utils.logger_utils import *
 from utils.database_utils import DataBaseUtil
 
 
-class MyActionChains(ActionChains):
-    p_count = 1
-
-    def new_pointer(self):
-        """
-        创建一个新的指针
-        :return:
-        """
-        self.p_count += 1
-        pointer = self.w3c_actions.add_pointer_input("touch", f'p_{self.p_count}')
-        p_action = PointerActions(pointer)
-        return p_action
+# class MyActionChains(ActionChains):
+#     p_count = 1
+#
+#     def new_pointer(self):
+#         """
+#         创建一个新的指针
+#         :return:
+#         """
+#         self.p_count += 1
+#         pointer = self.w3c_actions.add_pointer_input("touch", f'p_{self.p_count}')
+#         p_action = PointerActions(pointer)
+#         return p_action
 
 
 class KeyWord:
@@ -118,6 +119,7 @@ class KeyWord:
                 print_info_log(f"{el.tag_name}元素定位成功,位置：{el.rect}")
             else:
                 print_info_log(f"{el.text}元素定位成功,位置：{el.rect}")
+
             return el
         except Exception as e:
             print_error_log(f"元素{loc=}定位失败")
@@ -245,6 +247,7 @@ class KeyWord:
         return el
 
     def key_sleep(self, time_):
+        print_info_log(f'休眠{time_}秒')
         time.sleep(time_)
 
     def key_absolutely_swipe(self, start_coord, end_coord, times):
@@ -275,6 +278,7 @@ class KeyWord:
         print_info_log('滑动操作完成')
 
     def key_repeat_click_ele(self, loc, times):
+
         el = self.find_element(loc)
         actions = ActionChains(self.driver)
         print_info_log('正在执行重复点击')
@@ -477,3 +481,71 @@ class KeyWord:
         print_info_log(f'正在选择下拉菜单"{value}"')
         getattr(select, by)(value)
         print_info_log(f'选择下拉菜单"{value}"成功')
+
+    def key_alert(self, btn_str=None):
+        try:
+            self.wait.until(ec.alert_is_present())
+            alert = self.driver.switch_to.alert
+            print_info_log('切换到alert')
+        except:
+            alert = self.wait.until(ec.alert_is_present())
+            print_info_log('未切换成功,直接操作')
+        finally:
+            if btn_str == '确定' or btn_str == '确认' or btn_str == '同意' or btn_str is None:
+                print_info_log('执行accept')
+                alert.accept()
+                time.sleep(3)
+            elif btn_str == '取消' or btn_str == '拒绝':
+                print_info_log('执行dismiss')
+                alert.dismiss()
+                time.sleep(3)
+
+    @allure.step('切换窗口句柄')
+    def key_switch_handles(self, index_num=None):
+        handles = self.driver.window_handles
+        # current_handle = self.driver.current_window_handle
+        if not index_num:
+            print_info_log(f'正在切换窗口句柄到handles:0')
+            self.driver.switch_to.window(handles[0])
+        else:
+            print_info_log(f'正在切换窗口句柄到handles:{index_num}')
+            self.driver.switch_to.window(handles[index_num])
+        print_info_log('窗口句柄切换完成')
+
+    def key_slider(self, slider, slider_bar, percent=None):
+        """
+        滑块拖动关键字
+        :param slider: 滑块定位表达式
+        :param slider_bar: 滑槽定位表达式
+        :param percent: 滑动比例，例如：1或者0.6
+        :return:
+        """
+        if percent:
+            percent = float(percent)
+        else:
+            percent = int(1)
+        slider_ele = self.find_element(slider)
+        slider_bar_ele = self.find_element(slider_bar)
+        print_info_log('正在计算滚动条需要拖动的行程')
+        delta_x = slider_bar_ele.size['width'] * percent
+        ac = ActionChains(self.driver)
+        ac.click_and_hold(slider_ele).perform()
+        i = 1
+        total_length = 0
+        while True:
+            random_lens = random.randint(3, 15)
+            print_info_log(f'正在拖动第{i}次')
+            ac.move_by_offset(random_lens, 0).perform()
+            print_info_log(f'本次拖动距离为{random_lens}个像素')
+            total_length = total_length + random_lens  # 已拖动距离
+            print_info_log(f'已拖动行程为{total_length}个像素')
+            remainder_length = delta_x - total_length  # 剩余距离
+            print_info_log(f'剩余行程为{remainder_length}个像素')
+            time.sleep(0.07)
+            if remainder_length < 0:
+                print_info_log('完成拖动,准备释放鼠标')
+                break
+            i += 1
+        print_info_log('正在释放鼠标')
+        ActionBuilder(self.driver).clear_actions()
+

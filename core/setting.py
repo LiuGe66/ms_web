@@ -39,6 +39,11 @@ class UISettings(BaseSettings):
     # 日志清理门限值
     logs_num_clear: int = 10
 
+    browser_debugger: bool = False
+
+    set_cookies: bool = False
+
+    first_debugger: bool = False
 
 # 载入ini文件内容
 def load_ini():
