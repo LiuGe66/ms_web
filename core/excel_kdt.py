@@ -3,7 +3,7 @@
 # @FileName: excel_data.py
 # @Time : 2022/11/27 11:15
 from pathlib import Path
-from core.setting import ui_setting
+from core.setting import settings
 import allure
 import pytest
 from openpyxl.reader.excel import load_workbook
@@ -41,7 +41,11 @@ def data_by_excel(file):
 
             print_debug_log(f"正在处理下一行：{line}")
             if line[2] == 'alert' and line[0] is not None:
-                ui_setting.cap_png = 0  # 含有alert的页面无法截图,关闭截图功能
+                settings.cap_png = 0  # 含有alert的页面无法截图,关闭截图功能
+            if line[2] == 'img_verify' and line[0] is not None:
+                settings.cap_png = 0  # 含有alert的页面无法截图,关闭截图功能
+            if line[2] == 'verify_code_gap' and line[0] is not None:
+                settings.window_max = 1  # 含有缺口验证码的页面需要最大化
             if isinstance(_id, int):  # 步骤
                 if _id == -1:
                     case_name = line[3]
@@ -100,7 +104,7 @@ def create_case(test_suite: dict, file):
                     for step in step_list:
                         key = step[2]  # 关键字
                         if key == 'alert':
-                            ui_setting.cap_png = 0
+                            settings.cap_png = 0
                         args = step[3:]  # 关键字参数
                         new_step_id = next(gen_id)  # 从步骤id生成器中取值
                         print_info_log(f"执行第{new_step_id}步关键字：{key=},{args=}")
@@ -109,7 +113,7 @@ def create_case(test_suite: dict, file):
                         try:
                             with allure.step(step[1]):
                                 f(*args)  # 用例是在这里执行的
-                                if ui_setting.cap_png:
+                                if settings.cap_png:
                                     allure.attach(
                                         kw.driver.get_screenshot_as_png(),
                                         step[1],
@@ -125,7 +129,7 @@ def create_case(test_suite: dict, file):
                             )
                             raise e
                         finally:
-                            if ui_setting.cap_png:
+                            if settings.cap_png:
                                 allure.attach(
                                     kw.driver.get_screenshot_as_png(),
                                     step[1],
